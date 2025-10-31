@@ -1,25 +1,36 @@
-// Applicazione principale
+// Applicazione principale con controllo audio completo
 class HardcoreMusicApp {
     constructor() {
         this.audioEngine = new HardcoreAudioEngine();
         this.currentSection = 'creator';
         this.uploadedAudio = null;
         this.isInitialized = false;
+        this.isRemixPlaying = false;
+        this.currentEffects = {
+            bass: 100,
+            speed: 100,
+            bpm: 140,
+            distortion: 0,
+            pitch: 0,
+            volume: 100
+        };
+        
+        this.visualizerInterval = null;
+        this.meterInterval = null;
         
         this.init();
     }
 
     async init() {
-        // Mostra loading
         this.showLoading('Inizializzazione audio...');
         
         try {
-            // Inizializza motore audio
             const success = await this.audioEngine.init();
             
             if (success) {
                 this.setupEventListeners();
                 this.setupSampleLibrary();
+                this.startVisualizers();
                 this.isInitialized = true;
                 console.log('App inizializzata con successo');
             } else {
@@ -41,7 +52,7 @@ class HardcoreMusicApp {
             });
         });
 
-        // Controlli audio
+        // Controlli creator
         document.getElementById('play-btn').addEventListener('click', () => {
             this.playCreator();
         });
@@ -50,8 +61,13 @@ class HardcoreMusicApp {
             this.stopAudio();
         });
 
+        // Controlli remix
         document.getElementById('remix-play-btn').addEventListener('click', () => {
-            this.playRemix();
+            this.toggleRemixPlayback();
+        });
+
+        document.getElementById('remix-stop-btn').addEventListener('click', () => {
+            this.stopRemix();
         });
 
         // Upload file
@@ -65,30 +81,81 @@ class HardcoreMusicApp {
 
         // Drag and drop
         const uploadArea = document.getElementById('upload-area');
+        uploadArea.addEventListener('dragover', (e) => e.preventDefault());
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             this.handleFileUpload(e.dataTransfer.files[0]);
         });
 
-        // Aggiorna controlli in tempo reale
+        // Salvataggio
+        document.getElementById('save-btn').addEventListener('click', () => {
+            this.saveCreatorTrack();
+        });
+
+        document.getElementById('remix-save-btn').addEventListener('click', () => {
+            this.saveRemixTrack();
+        });
+
+        // Controlli in tempo reale
         this.setupRealTimeControls();
+        
+        // Qualità esportazione
+        this.setupExportOptions();
+    }
+
+    setupRealTimeControls() {
+        // Mappa dei controlli remix
+        const remixControls = [
+            { id: 'remix-bass', key: 'bass', format: (val) => `${val}%` },
+            { id: 'remix-speed', key: 'speed', format: (val) => `${val}%` },
+            { id: 'remix-bpm', key: 'bpm', format: (val) => `${val} BPM` },
+            { id: 'remix-distortion', key: 'distortion', format: (val) => `${val}%` },
+            { id: 'remix-pitch', key: 'pitch', format: (val) => `${val} semitoni` },
+            { id: 'remix-volume', key: 'volume', format: (val) => `${val}%` }
+        ];
+
+        remixControls.forEach(control => {
+            const slider = document.getElementById(control.id);
+            const display = slider.nextElementSibling;
+            
+            slider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                this.currentEffects[control.key] = value;
+                display.textContent = control.format(value);
+                
+                // Applica effetti in tempo reale se la traccia è in riproduzione
+                if (this.isRemixPlaying) {
+                    this.audioEngine.updateEffects(this.currentEffects);
+                }
+            });
+        });
+    }
+
+    setupExportOptions() {
+        document.querySelectorAll('.quality-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                document.querySelectorAll('.quality-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                e.target.classList.add('selected');
+            });
+        });
     }
 
     setupSampleLibrary() {
-        // Popola la libreria campioni dinamicamente
         const sampleLibrary = document.querySelector('.sample-library');
         
         const sampleData = [
-            { name: 'kick1', display: 'KICK 1', type: 'kick' },
-            { name: 'kick2', display: 'KICK 2', type: 'kick' },
-            { name: 'kick3', display: 'KICK 3', type: 'kick' },
-            { name: 'bass1', display: 'BASS 1', type: 'bass' },
-            { name: 'bass2', display: 'BASS 2', type: 'bass' },
-            { name: 'synth1', display: 'SYNTH 1', type: 'synth' },
-            { name: 'synth2', display: 'SYNTH 2', type: 'synth' },
+            { name: 'kick1', display: 'KICK HARDCORE', type: 'kick' },
+            { name: 'kick2', display: 'KICK DISTORTO', type: 'kick' },
+            { name: 'kick3', display: 'KICK PESANTE', type: 'kick' },
+            { name: 'bass1', display: 'BASS ACIDO', type: 'bass' },
+            { name: 'bass2', display: 'BASS HOOVER', type: 'bass' },
+            { name: 'synth1', display: 'SYNTH LEAD', type: 'synth' },
+            { name: 'synth2', display: 'SYNTH ACID', type: 'synth' },
+            { name: 'hoover', display: 'HOOVER', type: 'fx' },
             { name: 'fx1', display: 'FX RISER', type: 'fx' },
-            { name: 'fx2', display: 'FX DOWN', type: 'fx' },
-            { name: 'fx3', display: 'FX REVERSE', type: 'fx' }
+            { name: 'fx2', display: 'FX IMPACT', type: 'fx' }
         ];
 
         sampleLibrary.innerHTML = '';
@@ -107,42 +174,6 @@ class HardcoreMusicApp {
         });
     }
 
-    setupRealTimeControls() {
-        // Controlli sezione creator
-        const controls = [
-            { id: 'kick-volume', param: 'volume', min: 0, max: 100 },
-            { id: 'bass-volume', param: 'volume', min: 0, max: 100 },
-            { id: 'bpm', param: 'bpm', min: 140, max: 220 },
-            { id: 'distortion', param: 'distortion', min: 0, max: 100 }
-        ];
-
-        controls.forEach(control => {
-            const slider = document.getElementById(control.id);
-            if (slider) {
-                slider.addEventListener('input', (e) => {
-                    this.updateAudioParams();
-                });
-            }
-        });
-
-        // Controlli sezione remix
-        const remixControls = [
-            { id: 'remix-bass', param: 'bass' },
-            { id: 'remix-speed', param: 'speed' },
-            { id: 'remix-bpm', param: 'bpm' },
-            { id: 'remix-distortion', param: 'distortion' }
-        ];
-
-        remixControls.forEach(control => {
-            const slider = document.getElementById(control.id);
-            if (slider) {
-                slider.addEventListener('input', (e) => {
-                    this.updateRemixParams();
-                });
-            }
-        });
-    }
-
     playSample(sampleName) {
         if (!this.isInitialized) return;
 
@@ -155,6 +186,179 @@ class HardcoreMusicApp {
         this.audioEngine.playSample(sampleName, options);
     }
 
+    async playCreator() {
+        if (!this.isInitialized) return;
+        
+        // Simula una sequenza hardcore
+        this.playSample('kick1');
+        setTimeout(() => this.playSample('kick2'), 250);
+        setTimeout(() => this.playSample('bass1'), 500);
+        
+        document.querySelector('.visualizer').classList.add('pulsing');
+    }
+
+    stopAudio() {
+        this.audioEngine.stopPlayback();
+        document.querySelector('.visualizer').classList.remove('pulsing');
+    }
+
+    async toggleRemixPlayback() {
+        if (!this.uploadedAudio) {
+            alert('Prima carica un file audio!');
+            return;
+        }
+
+        if (this.isRemixPlaying) {
+            this.stopRemix();
+        } else {
+            await this.playRemix();
+        }
+    }
+
+    async playRemix() {
+        try {
+            this.showLoading('Avvio riproduzione...');
+            
+            await this.audioEngine.loadAndPlayAudioFile(this.uploadedAudio, this.currentEffects);
+            this.isRemixPlaying = true;
+            
+            document.getElementById('remix-play-btn').textContent = 'PAUSA';
+            document.querySelector('#remix-visualizer').classList.add('pulsing');
+            
+            this.startAudioMeter();
+            
+        } catch (error) {
+            this.showError('Errore riproduzione: ' + error.message);
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    stopRemix() {
+        this.audioEngine.stopPlayback();
+        this.isRemixPlaying = false;
+        
+        document.getElementById('remix-play-btn').textContent = 'PLAY REMIX';
+        document.querySelector('#remix-visualizer').classList.remove('pulsing');
+        
+        this.stopAudioMeter();
+    }
+
+    async handleFileUpload(file) {
+        if (!file || !file.type.includes('audio')) {
+            alert('Per favore carica un file audio valido!');
+            return;
+        }
+
+        this.showLoading('Analisi file audio...');
+        
+        try {
+            this.uploadedAudio = file;
+            
+            // Analizza il file
+            const audioInfo = await this.analyzeAudioFile(file);
+            this.displayTrackInfo(audioInfo);
+            
+            document.querySelector('#upload-area p').textContent = `File pronto: ${file.name}`;
+            document.getElementById('track-info').style.display = 'block';
+            
+            console.log('File analizzato:', audioInfo);
+            
+        } catch (error) {
+            alert('Errore nell\'analisi del file: ' + error.message);
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async analyzeAudioFile(file) {
+        return new Promise((resolve) => {
+            const audio = new Audio();
+            const url = URL.createObjectURL(file);
+            
+            audio.addEventListener('loadedmetadata', () => {
+                resolve({
+                    name: file.name,
+                    duration: this.formatTime(audio.duration),
+                    size: this.formatFileSize(file.size),
+                    type: file.type,
+                    bitrate: this.calculateBitrate(file.size, audio.duration)
+                });
+                
+                URL.revokeObjectURL(url);
+            });
+            
+            audio.src = url;
+        });
+    }
+
+    displayTrackInfo(info) {
+        const details = document.getElementById('track-details');
+        details.innerHTML = `
+            <p><strong>Nome:</strong> ${info.name}</p>
+            <p><strong>Durata:</strong> ${info.duration}</p>
+            <p><strong>Dimensione:</strong> ${info.size}</p>
+            <p><strong>Tipo:</strong> ${info.type}</p>
+            <p><strong>Bitrate stimato:</strong> ${info.bitrate} kbps</p>
+        `;
+    }
+
+    startVisualizers() {
+        this.visualizerInterval = setInterval(() => {
+            this.updateVisualizers();
+        }, 50);
+    }
+
+    updateVisualizers() {
+        const data = this.audioEngine.getVisualizerData();
+        if (!data) return;
+
+        this.drawVisualizer('visualizer', data, '#ff0066');
+        this.drawVisualizer('remix-visualizer', data, '#00ffcc');
+    }
+
+    drawVisualizer(canvasId, data, color) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        ctx.clearRect(0, 0, width, height);
+
+        // Disegna le barre del visualizzatore
+        const barWidth = width / data.length;
+        ctx.fillStyle = color;
+
+        for (let i = 0; i < data.length; i++) {
+            const barHeight = (data[i] / 255) * height;
+            ctx.fillRect(i * barWidth, height - barHeight, barWidth - 1, barHeight);
+        }
+    }
+
+    startAudioMeter() {
+        this.meterInterval = setInterval(() => {
+            this.updateAudioMeter();
+        }, 100);
+    }
+
+    stopAudioMeter() {
+        if (this.meterInterval) {
+            clearInterval(this.meterInterval);
+            document.getElementById('meter-level').style.width = '0%';
+        }
+    }
+
+    updateAudioMeter() {
+        const data = this.audioEngine.getVisualizerData();
+        if (!data) return;
+
+        // Calcola il livello medio
+        const average = data.reduce((sum, value) => sum + value, 0) / data.length;
+        const level = (average / 255) * 100;
+
+        document.getElementById('meter-level').style.width = level + '%';
+    }
+
     animateSample(element) {
         element.style.transform = 'scale(0.9)';
         element.style.backgroundColor = 'var(--primary)';
@@ -165,48 +369,9 @@ class HardcoreMusicApp {
         }, 100);
     }
 
-    async playCreator() {
-        if (!this.isInitialized) return;
-        
-        this.audioEngine.start();
-        document.querySelector('.visualizer').classList.add('pulsing');
-    }
-
-    stopAudio() {
-        this.audioEngine.stop();
-        document.querySelector('.visualizer').classList.remove('pulsing');
-    }
-
-    async playRemix() {
-        if (!this.uploadedAudio) {
-            alert('Prima carica un file audio!');
-            return;
-        }
-
-        // Implementa la riproduzione del remix
-        console.log('Riproduzione remix con effetti applicati');
-    }
-
-    async handleFileUpload(file) {
-        if (!file) return;
-
-        this.showLoading('Processamento file...');
-        
-        try {
-            this.uploadedAudio = await this.audioEngine.processUploadedAudio(file);
-            document.querySelector('#upload-area p').textContent = `File pronto: ${file.name}`;
-            console.log('File processato:', this.uploadedAudio);
-        } catch (error) {
-            alert('Errore nel processamento del file: ' + error.message);
-        } finally {
-            this.hideLoading();
-        }
-    }
-
     switchSection(section) {
         this.currentSection = section;
         
-        // Aggiorna UI
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.classList.remove('active');
         });
@@ -218,16 +383,54 @@ class HardcoreMusicApp {
         document.getElementById(section).classList.add('active');
     }
 
-    updateAudioParams() {
-        // Aggiorna parametri audio in tempo reale
-        this.audioEngine.currentBPM = parseInt(document.getElementById('bpm').value);
+    async saveCreatorTrack() {
+        this.showLoading('Esportazione traccia...');
+        
+        try {
+            const result = await this.audioEngine.exportAudio();
+            this.showSuccess(`Traccia esportata con successo! (${result.format.toUpperCase()})`);
+        } catch (error) {
+            this.showError('Errore nell\'esportazione: ' + error.message);
+        } finally {
+            this.hideLoading();
+        }
     }
 
-    updateRemixParams() {
-        // Aggiorna parametri remix in tempo reale
-        if (this.uploadedAudio) {
-            // Qui applicheresti gli effetti al file caricato
+    async saveRemixTrack() {
+        if (!this.uploadedAudio) {
+            alert('Prima carica un file audio da remixare!');
+            return;
         }
+
+        this.showLoading('Esportazione remix...');
+        
+        try {
+            const quality = document.querySelector('.quality-option.selected').dataset.quality;
+            const result = await this.audioEngine.exportAudio();
+            this.showSuccess(`Remix esportato in ${quality.toUpperCase()}!`);
+        } catch (error) {
+            this.showError('Errore nell\'esportazione: ' + error.message);
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    // Utility functions
+    formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    formatFileSize(bytes) {
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        if (bytes === 0) return '0 Bytes';
+        const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    calculateBitrate(sizeInBytes, durationInSeconds) {
+        return Math.round((sizeInBytes * 8) / (durationInSeconds * 1000));
     }
 
     showLoading(message) {
@@ -236,11 +439,10 @@ class HardcoreMusicApp {
             overlay = document.createElement('div');
             overlay.id = 'loading-overlay';
             overlay.className = 'loading-overlay';
-            overlay.innerHTML = `<div>${message}</div>`;
             document.body.appendChild(overlay);
         }
+        overlay.innerHTML = `<div>${message}</div>`;
         overlay.style.display = 'flex';
-        overlay.querySelector('div').textContent = message;
     }
 
     hideLoading() {
@@ -251,11 +453,15 @@ class HardcoreMusicApp {
     }
 
     showError(message) {
-        alert('ERRORE: ' + message);
+        alert('❌ ' + message);
+    }
+
+    showSuccess(message) {
+        alert('✅ ' + message);
     }
 }
 
-// Inizializza l'app quando la pagina è caricata
+// Inizializza l'app
 document.addEventListener('DOMContentLoaded', () => {
     window.hardcoreApp = new HardcoreMusicApp();
 });
