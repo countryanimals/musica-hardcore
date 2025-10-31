@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hardcore Gabber Music Creator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>HARDCORE GABBER MUSIC CREATOR</h1>
+        <nav>
+            <button class="nav-btn active" data-section="creator">CREATORE</button>
+            <button class="nav-btn" data-section="remixer">REMIXER</button>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <!-- Sezione Creatore -->
+        <section id="creator" class="section active">
+            <h2>CREA LA TUA TRACCIA HARDCORE</h2>
+            
+            <div class="track-container">
+                <h3 class="track-title">TRACCIA PRINCIPALE</h3>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="kick-volume">VOLUME KICK</label>
+                        <input type="range" id="kick-volume" min="0" max="100" value="80">
+                        <div class="value-display">80%</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="bass-volume">VOLUME BASSO</label>
+                        <input type="range" id="bass-volume" min="0" max="100" value="70">
+                        <div class="value-display">70%</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="bpm">BPM</label>
+                        <input type="range" id="bpm" min="140" max="220" value="180">
+                        <div class="value-display">180 BPM</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="distortion">DISTORSIONE</label>
+                        <input type="range" id="distortion" min="0" max="100" value="30">
+                        <div class="value-display">30%</div>
+                    </div>
+                </div>
+                
+                <div class="visualizer">
+                    <canvas id="visualizer"></canvas>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" id="play-btn">PLAY</button>
+                    <button class="btn btn-secondary" id="stop-btn">STOP</button>
+                    <button class="btn btn-primary" id="save-btn">SALVA TRACCIA</button>
+                </div>
+            </div>
+            
+            <div class="sample-library">
+                <div class="sample" data-sample="kick1">KICK 1</div>
+                <div class="sample" data-sample="kick2">KICK 2</div>
+                <div class="sample" data-sample="kick3">KICK 3</div>
+                <div class="sample" data-sample="bass1">BASS 1</div>
+                <div class="sample" data-sample="bass2">BASS 2</div>
+                <div class="sample" data-sample="synth1">SYNTH 1</div>
+                <div class="sample" data-sample="synth2">SYNTH 2</div>
+                <div class="sample" data-sample="hoover">HOOVER</div>
+                <div class="sample" data-sample="fx1">FX 1</div>
+                <div class="sample" data-sample="fx2">FX 2</div>
+            </div>
+        </section>
+        
+        <!-- Sezione Remixer -->
+        <section id="remixer" class="section">
+            <h2>REMIXA LE TUE TRACCE</h2>
+            
+            <div class="upload-area" id="upload-area">
+                <p>TRASCINA QUI LA TUA TRACCIA O CLICCA PER CARICARE</p>
+                <input type="file" id="file-input" accept="audio/*" style="display: none;">
+                <button class="btn btn-secondary" id="upload-btn">CARICA FILE</button>
+            </div>
+            
+            <div class="track-container">
+                <h3 class="track-title">REMIX CONTROLLI</h3>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="remix-bass">AUMENTA BASSO</label>
+                        <input type="range" id="remix-bass" min="0" max="100" value="50">
+                        <div class="value-display">50%</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="remix-speed">VELOCITÀ</label>
+                        <input type="range" id="remix-speed" min="50" max="200" value="100">
+                        <div class="value-display">100%</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="remix-bpm">BPM</label>
+                        <input type="range" id="remix-bpm" min="140" max="220" value="180">
+                        <div class="value-display">180 BPM</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="remix-distortion">DISTORSIONE</label>
+                        <input type="range" id="remix-distortion" min="0" max="100" value="40">
+                        <div class="value-display">40%</div>
+                    </div>
+                </div>
+                
+                <div class="visualizer">
+                    <canvas id="remix-visualizer"></canvas>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" id="remix-play-btn">PLAY REMIX</button>
+                    <button class="btn btn-secondary" id="remix-stop-btn">STOP</button>
+                    <button class="btn btn-primary" id="remix-save-btn">SALVA REMIX</button>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <footer>
+        <p>HARDCORE GABBER MUSIC CREATOR - CREA E REMIXA LA TUA MUSICA</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
