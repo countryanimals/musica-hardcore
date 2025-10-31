@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hardcore Gabber Music Creator</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="advanced-styles.css">
 </head>
 <body>
     <header>
@@ -72,6 +73,26 @@
                 <div class="sample" data-sample="fx1">FX 1</div>
                 <div class="sample" data-sample="fx2">FX 2</div>
             </div>
+
+            <div class="samples-info">
+                <h3>BIBLIOTECA CAMPIONI HARDCORE</h3>
+                <div class="sample-category">
+                    <h4>🥁 KICKS DISTORTI</h4>
+                    <p>Kick potenti e distorti tipici del gabber olandese</p>
+                </div>
+                <div class="sample-category">
+                    <h4>🎸 BASS ACIDI</h4>
+                    <p>Linee di basso distorte e aggressive per l'hardcore</p>
+                </div>
+                <div class="sample-category">
+                    <h4>🎹 SYNTH HOOVER</h4>
+                    <p>Synth caratteristici dello stile hardcore anni 90</p>
+                </div>
+                <div class="sample-category">
+                    <h4>📢 FX E RISER</h4>
+                    <p>Effetti per build-up e transizioni</p>
+                </div>
+            </div>
         </section>
         
         <!-- Sezione Remixer -->
@@ -83,6 +104,11 @@
                 <input type="file" id="file-input" accept="audio/*" style="display: none;">
                 <button class="btn btn-secondary" id="upload-btn">CARICA FILE</button>
             </div>
+
+            <div class="track-info" id="track-info" style="display: none;">
+                <h3>INFORMAZIONI TRACCIA</h3>
+                <div id="track-details"></div>
+            </div>
             
             <div class="track-container">
                 <h3 class="track-title">REMIX CONTROLLI</h3>
@@ -90,8 +116,8 @@
                 <div class="controls">
                     <div class="control-group">
                         <label for="remix-bass">AUMENTA BASSO</label>
-                        <input type="range" id="remix-bass" min="0" max="100" value="50">
-                        <div class="value-display">50%</div>
+                        <input type="range" id="remix-bass" min="0" max="200" value="100">
+                        <div class="value-display">100%</div>
                     </div>
                     
                     <div class="control-group">
@@ -102,15 +128,31 @@
                     
                     <div class="control-group">
                         <label for="remix-bpm">BPM</label>
-                        <input type="range" id="remix-bpm" min="140" max="220" value="180">
-                        <div class="value-display">180 BPM</div>
+                        <input type="range" id="remix-bpm" min="80" max="250" value="140">
+                        <div class="value-display">140 BPM</div>
                     </div>
                     
                     <div class="control-group">
                         <label for="remix-distortion">DISTORSIONE</label>
-                        <input type="range" id="remix-distortion" min="0" max="100" value="40">
-                        <div class="value-display">40%</div>
+                        <input type="range" id="remix-distortion" min="0" max="100" value="0">
+                        <div class="value-display">0%</div>
                     </div>
+
+                    <div class="control-group">
+                        <label for="remix-pitch">PITCH</label>
+                        <input type="range" id="remix-pitch" min="-12" max="12" value="0">
+                        <div class="value-display">0 semitoni</div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="remix-volume">VOLUME</label>
+                        <input type="range" id="remix-volume" min="0" max="200" value="100">
+                        <div class="value-display">100%</div>
+                    </div>
+                </div>
+
+                <div class="audio-meter">
+                    <div class="meter-level" id="meter-level"></div>
                 </div>
                 
                 <div class="visualizer">
@@ -122,14 +164,29 @@
                     <button class="btn btn-secondary" id="remix-stop-btn">STOP</button>
                     <button class="btn btn-primary" id="remix-save-btn">SALVA REMIX</button>
                 </div>
+
+                <div class="export-options">
+                    <h4>OPZIONI ESPORTAZIONE</h4>
+                    <div class="export-quality">
+                        <div class="quality-option selected" data-quality="128">MP3 128kbps</div>
+                        <div class="quality-option" data-quality="192">MP3 192kbps</div>
+                        <div class="quality-option" data-quality="320">MP3 320kbps</div>
+                        <div class="quality-option" data-quality="wav">WAV Lossless</div>
+                    </div>
+                </div>
             </div>
         </section>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div>Caricamento...</div>
     </div>
     
     <footer>
         <p>HARDCORE GABBER MUSIC CREATOR - CREA E REMIXA LA TUA MUSICA</p>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="audio-engine.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
